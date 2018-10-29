@@ -1,0 +1,11 @@
+{
+    "db_blog":{
+        "host": "localhost",
+        "database":"simple_blog",
+        "username": "vidy",
+        "password": "password"
+    },
+    "server": {
+        "port": 8000
+    }
+}

@@ -1,0 +1,39 @@
+{
+    "compileOnSave": false,
+    "compilerOptions": {
+        // "rootDir": "src",
+        "target": "es6",
+        "module": "commonjs",
+        "lib": ["es2015", "es2016", "esnext"],
+        "types": ["node", "bluebird"],
+        "sourceMap": true,
+        "outDir": "build",
+        "strict": false,
+        "alwaysStrict": false,
+        "noImplicitAny": false,
+        "strictNullChecks": true,
+        "strictFunctionTypes": true,
+        "noImplicitThis": true,
+        // "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "moduleResolution": "node",
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true
+    },
+    "files": [
+        "src/app.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist",
+        "build"
+    ],
+    "filesGlob": [
+        "./src/**/*.ts",
+        "./test/**/*.ts",
+        "./node_modules/@types/**/*.d.ts"
+    ]
+}
+    
