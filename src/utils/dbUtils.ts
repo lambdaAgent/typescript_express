@@ -1,6 +1,7 @@
 import config = require('config');
 import logger = require('./../utils/logger');
 import {Sequelize} from 'sequelize-typescript'
+import * as fs from 'fs';
 
 const pgconfig = config.get("db_blog")
 logger.info(`DB Connection Settings: ${JSON.stringify(pgconfig)}`);
@@ -17,8 +18,11 @@ const Db_blog = new Sequelize( {
       min: 0,
       acquire: 30000,
       idle: 10000
-    }
-  });
+    },
+
+    omitNull: true,
+    modelPaths: [__dirname +'/../model/**/*.ts']
+});
 
 
 

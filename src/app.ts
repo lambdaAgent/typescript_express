@@ -8,8 +8,8 @@ import * as cors from "cors";
 import { Db_blog } from './utils/dbUtils'
 
 // model
-import migrationScript from './utils/migrationScript'
-import Person, { PersonRepository } from './model/Person'
+import Person from './model/Person'
+import { Validate } from 'sequelize-typescript';
 
 //import controllers
 // import * as healthcheckController from './controllers/controller-healthcheck';
@@ -20,6 +20,16 @@ const router: express.Router = express.Router();
 app.use(cors());
 app.use(bodyParser.json());
 app.use(router);  // tell the app this is the router we are using
+//@ts-ignore
+app.use((req, res, next) => {
+    if(!validateToken(req)){
+        res.status(401).json({message: 'Token is not valid or expired'})
+    } 
+    if(!authorizeToken(req)){
+        res.status(403).json({message: 'User is not authorized'})
+    }
+    else 
+})
 
 //healthcheck routes
 // router.get('/', healthcheckController.healthcheck);
@@ -53,19 +63,9 @@ app.use((req, res, next) => {
  }
 
 app.listen(config.server.port, function () {
-    logger.info(`server listening on port: ${config.port}`);
+    logger.info(`server listening on port: ${config.server.port}`);
 
     Db_blog.authenticate()
-    .then(() => {
-        logger.info('Db_blog Connection has been established successfully.')
-        migrationScript()
-
-
-        const sample = new Person({first_name: 'vidy', last_name:'alfredo', username: 'alfred', email: 'test@email.com', _password_encrypted: 'password'})
-        PersonRepository.insert(sample)
-            
-    })
-    .catch(err => {
-        logger.error('Db_blog Unable to connect to the database:', err);
-    });
+            .then(() => logger.info('Db_blog Connection has been established successfully.'))
+            .catch(err => logger.error('Db_blog Unable to connect to the database:', err));
 }); 
