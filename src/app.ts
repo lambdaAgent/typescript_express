@@ -3,32 +3,31 @@ import * as express from 'express';
 import * as bodyParser from 'body-parser';
 import logger = require('./utils/logger');
 import * as cors from "cors";
+import { Router, Request, Response } from 'express';
 
 // DbUtils
 import { Db_blog } from './utils/dbUtils'
+import TokenUtil from './Model/Token/TokenUtil'
 
 // model
-import Person from './model/Person'
-import { Validate } from 'sequelize-typescript';
+import Person from './model/Person/Person'
+
 
 //import controllers
 // import * as healthcheckController from './controllers/controller-healthcheck';
 // import * as sampleController from './controllers/controller-sample';
 
 const app: express.Express = express();
-const router: express.Router = express.Router();
+const router: Router = express.Router();
 app.use(cors());
 app.use(bodyParser.json());
 app.use(router);  // tell the app this is the router we are using
 //@ts-ignore
-app.use((req, res, next) => {
-    if(!validateToken(req)){
-        res.status(401).json({message: 'Token is not valid or expired'})
-    } 
-    if(!authorizeToken(req)){
-        res.status(403).json({message: 'User is not authorized'})
-    }
-    else 
+app.use((req:Request, res:Response, next) => {
+    // Intercept here
+    TokenUtil.validate(req,res)
+    TokenUtil.authenticate(req, res)
+    next()
 })
 
 //healthcheck routes
