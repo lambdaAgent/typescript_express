@@ -5,7 +5,7 @@ type MethodAndPermission = {
     role: string
     permissions: string[]
 }
-class RouteDetail {
+export class RouteDetail {
     pathname: string
     methodPermissions: MethodAndPermission[] = [] // pathname, permissions
 

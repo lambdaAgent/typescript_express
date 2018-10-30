@@ -6,7 +6,8 @@ import * as Password from '../utils/password'
 import Token, { DataToken, TokenUtil } from '../Token/Token';
 import {AuthCacheUtil, AuthToken} from '../Token/Auth/AuthCache'
 import Roles from '../Token/Roles';
-import PathDetailUtil from '../utils/PathDetail'
+import PathDetailUtil, { RouteDetail } from '../utils/PathDetail'
+import { reset } from 'continuation-local-storage';
 
 const router: Router = Router();
 
@@ -56,6 +57,13 @@ router.post('/login', validateLoginBody, (req:Request, res: Response, next) => {
       .catch(next)
 })
 
+PathDetailUtil.registerRoute('/register', 'post', Roles.ALL)
+router.post('/register', validateLoginBody, (req:Request, _:Response, _) => {
+    const {email, password} = req.body
+    const person = new Person()  
+    //after register, please create PersonDetail
+})
+
 export default router;
 
 
@@ -91,9 +99,24 @@ function validateToken(req, res, next) {
 
 function authorizeUser(path:string){
     console.log(path)
-    return function(req:Request, _:Response, next){
+    return function(req:Request, res:Response, next){
+        const method = req.method
         //@ts-ignore
-        console.log(req.dataToken)
-        next
+        const authToken:AuthToken = AuthCacheUtil.get(req.dataToken) as AuthToken
+        const routeDetail: RouteDetail = PathDetailUtil.getRouteDetail(path)
+        const userPermissions:string[] = (authToken.data as DataToken).role.permissions
+        const pagePermissions:string[] = routeDetail.methodPermissions
+                                    .filter(methodPermission => methodPermission.method === method)[0]
+                                    .permissions
+        for(let i=0; i<userPermissions.length;i++){
+            const userPermission = userPermissions[i]
+            if(pagePermissions.indexOf(userPermission) >= 0){
+                next()
+                break;
+            }
+        }
+
+        // not allow
+        return res.status(403).json({message: 'User is not allowed to access the page'})
     }
 }

@@ -23,14 +23,14 @@ class Person extends Model<Person> {
     @Column({ type: DataType.STRING, allowNull: false })
     password: string;
 
-    @AllowNull(false) @Unique @Column 
-    username: string;
+    @AllowNull(true) @Unique @Column 
+    username?: string;
     
     @AllowNull(false) @IsEmail @Unique @Column 
     email: string;
 
     @HasOne(() => PersonDetail)
-    person_detail: PersonDetail
+    person_detail?: PersonDetail
 
     @CreatedAt created_at: number;
     
