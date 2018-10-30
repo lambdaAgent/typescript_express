@@ -7,11 +7,11 @@ function migrate(){
 
     CREATE TABLE IF NOT EXISTS core.person(
         id SERIAL PRIMARY KEY,
-        username varchar(255) unique,
-        first_name varchar(255),
-        last_name varchar(255),
-        password varchar(255),
-        email varchar(255) unique,
+        username varchar(255) unique NOT NULL,
+        first_name varchar(255) NOT NULL,
+        last_name varchar(255) NOT NULL,
+        password varchar(255) NOT NULL,
+        email varchar(255) unique NOT NULL,
         created_at TIME,
         updated_at TIME
       );`

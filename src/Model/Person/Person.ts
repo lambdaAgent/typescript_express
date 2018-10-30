@@ -1,6 +1,7 @@
-import {Table, Column, Model, CreatedAt, UpdatedAt, AllowNull, IsUUID, PrimaryKey, NotNull, BeforeCreate, BeforeUpdate, Length, DataType, AfterCreate, AfterUpdate, IsEmail, Unique} from 'sequelize-typescript';
+import {Table, Column, Model, CreatedAt, UpdatedAt, AllowNull, IsUUID, PrimaryKey, NotNull, BeforeCreate, BeforeUpdate, Length, DataType, AfterCreate, AfterUpdate, IsEmail, Unique, HasOne} from 'sequelize-typescript';
 
 import {hashedPassword} from '../../utils/password'
+import PersonDetail from '../Detail/Detail'
 
 @Table({timestamps: true, tableName: "person", schema: "core"})
 class Person extends Model<Person> {
@@ -15,7 +16,7 @@ class Person extends Model<Person> {
     @AllowNull(false) @Column
     first_name: string;
     
-    @Column 
+    @AllowNull(false) @Column 
     last_name: string;
 
     @Length({min: 6, msg: 'password must be at least 6 characters'})
@@ -28,6 +29,9 @@ class Person extends Model<Person> {
     @AllowNull(false) @IsEmail @Unique @Column 
     email: string;
 
+    @HasOne(() => PersonDetail)
+    person_detail: PersonDetail
+
     @CreatedAt created_at: number;
     
     @UpdatedAt updated_at: number;
@@ -37,6 +41,8 @@ class Person extends Model<Person> {
 
 export default Person;
 
+
+//helpers
 export function encryptPasswordIfChanged(user:Person) {
     if (user.get('password') && user.changed('password')) {
         //   encryptPassword(user.get('password'));

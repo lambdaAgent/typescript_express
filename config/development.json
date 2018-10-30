@@ -7,5 +7,11 @@
     },
     "server": {
         "port": 8000
+    },
+    "token": {
+        "passwordForBody": "AFFS",
+        "secret": "asdfasf",
+        "maxAge": 14400,
+        "issuer": "vidy"
     }
 }
