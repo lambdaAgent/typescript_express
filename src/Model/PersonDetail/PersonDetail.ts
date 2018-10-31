@@ -19,11 +19,8 @@ class PersonDetail extends Model<PersonDetail> {
     // has many asset row
     asset: string
     
-    @ForeignKey(() => Person) @Column
-    personId: number;
-    
     @BelongsTo(() => Person)
-    person: Person;
+    person_id: Person;
 
     @AllowNull(false) @Column(DataType.STRING)
     type: string;

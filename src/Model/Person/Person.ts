@@ -11,7 +11,7 @@ class Person extends Model<Person> {
     static encryptPassword = encryptPassword
 
     @IsUUID(4) @PrimaryKey @Unique @Column
-    id: number;
+    person_id: number;
     
     @AllowNull(false) @Column
     first_name: string;
