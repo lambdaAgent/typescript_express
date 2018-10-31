@@ -8,20 +8,37 @@ import Person from '../Person/Person'
 class PersonDetail extends Model<PersonDetail> {
     @PrimaryKey @AutoIncrement @Column(DataType.INTEGER)
     id: number;
+
+    email:string
+    first_name: string
+    last_name: string
+
+    // has Many with social_media
+    social_media?: string[]
+
+    // has many asset row
+    asset: string
     
-    @AllowNull(false)
-    @ForeignKey(() => Person)
-    @Column(DataType.INTEGER)
-    person_id: number;
+    @ForeignKey(() => Person) @Column
+    personId: number;
     
-    @BelongsTo(() => Person, {
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE"
-    })
+    @BelongsTo(() => Person)
     person: Person;
-    
+
     @AllowNull(false) @Column(DataType.STRING)
     type: string;
 }
+`
+CREATE TABLE IF NOT EXISTS core.person(
+    id SERIAL PRIMARY KEY,
+    email varchar(255) unique NOT NULL,
+    belongs_to_person varchar(255) NOT NULL,
+    last_name varchar(255) NOT NULL,
+    password varchar(255) NOT NULL,
+    email varchar(255) unique NOT NULL,
+    created_at TIME,
+    updated_at TIME
+  );
+`
 
 export default PersonDetail

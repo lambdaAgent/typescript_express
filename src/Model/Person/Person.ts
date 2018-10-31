@@ -1,7 +1,7 @@
 import {Table, Column, Model, CreatedAt, UpdatedAt, AllowNull, IsUUID, PrimaryKey, NotNull, BeforeCreate, BeforeUpdate, Length, DataType, AfterCreate, AfterUpdate, IsEmail, Unique, HasOne} from 'sequelize-typescript';
 
 import {hashedPassword} from '../../utils/password'
-import PersonDetail from '../Detail/Detail'
+import PersonDetail from '../PersonDetail/PersonDetail'
 
 @Table({timestamps: true, tableName: "person", schema: "core"})
 class Person extends Model<Person> {

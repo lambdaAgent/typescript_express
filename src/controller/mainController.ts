@@ -7,7 +7,7 @@ import Token, { DataToken, TokenUtil } from '../Token/Token';
 import {AuthCacheUtil, AuthToken} from '../Token/Auth/AuthCache'
 import Roles from '../Token/Roles';
 import PathDetailUtil, { RouteDetail } from '../utils/PathDetail'
-import { reset } from 'continuation-local-storage';
+import PersonService from '../Service/PersonService'
 
 const router: Router = Router();
 
@@ -58,10 +58,21 @@ router.post('/login', validateLoginBody, (req:Request, res: Response, next) => {
 })
 
 PathDetailUtil.registerRoute('/register', 'post', Roles.ALL)
-router.post('/register', validateLoginBody, (req:Request, _:Response, _) => {
+router.post('/register', validateLoginBody, (req:Request, res:Response, next) => {
     const {email, password} = req.body
-    const person = new Person()  
-    //after register, please create PersonDetail
+    PersonService.IsEmailRegistered(email)
+        .then((isRegister):Promise<boolean> => {
+            if(isRegister) {
+                res.status(400).json({message: 'User has already registered'})
+                return Promise.resolve(false)
+            }
+            return Promise.resolve(false) //PersonService.registerUser(email, password)                      
+        })
+        .then(resultOfRegistering => {
+            if(resultOfRegistering) res.status(200).json({message: 'User successfully registered'})
+            res.status(500).json({message: 'Failed to registered'})
+        })
+        .catch(next)
 })
 
 export default router;
@@ -73,10 +84,10 @@ const errorContentType = (res) => res.status(400).json({message: 'wrong content 
 
 function validateLoginBody(req, res, next){
     const body = req.body;
-    
+    console.log(body)
     if(Object.keys(body).length === 0) return errorContentType(res)
-    if(!("email" in body && "password" in body)) return error400(res, 'username or password is blank')
-    if(!body.email && !body.password) return error400(res, 'username or password is blank')
+    if(!("email" in body && "password" in body)) return error400(res, 'email or password is blank')
+    if(!body.email && !body.password) return error400(res, 'email or password is blank')
 
     return next()
 }
