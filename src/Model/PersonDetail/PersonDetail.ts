@@ -9,33 +9,34 @@ class PersonDetail extends Model<PersonDetail> {
     @PrimaryKey @AutoIncrement @Column(DataType.INTEGER)
     id: number;
 
+    @AllowNull(false) @IsEmail @Unique @Column 
     email:string
+    @ForeignKey(() => Person) @Column
+    person_id: number;
+    @BelongsTo(() => Person, 'person_id')
+    person: Person;
+    @AllowNull(false) @Column(DataType.STRING)
+    type: string;
+
+
+    @AllowNull(true) @Column
     first_name: string
+    @AllowNull(true) @Column
     last_name: string
 
     // has Many with social_media
-    social_media?: string[]
+    @AllowNull(true) @Column(DataType.STRING)
+    social_media_id?: string[]
 
-    // has many asset row
+    // has many asset 
+    @AllowNull(true) @Column(DataType.STRING)
     asset: string
     
-    @BelongsTo(() => Person)
-    person_id: Person;
+    @CreatedAt created_at: number;
+    
+    @UpdatedAt updated_at: number;
 
-    @AllowNull(false) @Column(DataType.STRING)
-    type: string;
 }
-`
-CREATE TABLE IF NOT EXISTS core.person(
-    id SERIAL PRIMARY KEY,
-    email varchar(255) unique NOT NULL,
-    belongs_to_person varchar(255) NOT NULL,
-    last_name varchar(255) NOT NULL,
-    password varchar(255) NOT NULL,
-    email varchar(255) unique NOT NULL,
-    created_at TIME,
-    updated_at TIME
-  );
-`
+
 
 export default PersonDetail

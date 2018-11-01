@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 // import PersonDetail from '../model/Detail/Detail';
-import Person from '../model/Person/Person';
+import Person from '../Model/Person/Person';
 import HttpError from '../Error/HttpError/HttpError'
 import * as Password from '../utils/password'
 import Token, { DataToken, TokenUtil } from '../Token/Token';
@@ -8,6 +8,8 @@ import {AuthCacheUtil, AuthToken} from '../Token/Auth/AuthCache'
 import Roles from '../Token/Roles';
 import PathDetailUtil, { RouteDetail } from '../utils/PathDetail'
 import PersonService from '../Service/PersonService'
+import logger = require('../utils/logger');
+import { log } from 'util';
 
 const router: Router = Router();
 
@@ -60,17 +62,22 @@ router.post('/login', validateLoginBody, (req:Request, res: Response, next) => {
 PathDetailUtil.registerRoute('/register', 'post', Roles.ALL)
 router.post('/register', validateLoginBody, (req:Request, res:Response, next) => {
     const {email, password} = req.body
+    console.log(password, typeof password)
     PersonService.IsEmailRegistered(email)
-        .then((isRegister):Promise<boolean> => {
+        .then((isRegister):Promise<undefined|boolean>=> {
+            logger.info('ISREGISTERED', isRegister)
             if(isRegister) {
-                res.status(400).json({message: 'User has already registered'})
-                return Promise.resolve(false)
+                 res.status(400).json({message: 'User has already registered'})
+                 return Promise.resolve(undefined)
+            } else {
+                return PersonService.registerUser(email, password)                      
             }
-            return Promise.resolve(false) //PersonService.registerUser(email, password)                      
         })
         .then(resultOfRegistering => {
+            if(typeof resultOfRegistering === 'undefined') return
+            logger.info('RESULT OF REGISTERING', resultOfRegistering)
             if(resultOfRegistering) res.status(200).json({message: 'User successfully registered'})
-            res.status(500).json({message: 'Failed to registered'})
+            else res.status(500).json({message: 'Failed to registered'})
         })
         .catch(next)
 })
@@ -84,11 +91,11 @@ const errorContentType = (res) => res.status(400).json({message: 'wrong content 
 
 function validateLoginBody(req, res, next){
     const body = req.body;
-    console.log(body)
     if(Object.keys(body).length === 0) return errorContentType(res)
     if(!("email" in body && "password" in body)) return error400(res, 'email or password is blank')
     if(!body.email && !body.password) return error400(res, 'email or password is blank')
-
+    if(typeof body.email !== 'string') return error400(res, 'email or password must be a string')
+    if(typeof body.password !== 'string') return error400(res, 'email or password must be a string')
     return next()
 }
 

@@ -1,4 +1,4 @@
-import {Table, Column, Model, CreatedAt, UpdatedAt, AllowNull, IsUUID, PrimaryKey, NotNull, BeforeCreate, BeforeUpdate, Length, DataType, AfterCreate, AfterUpdate, IsEmail, Unique, HasOne} from 'sequelize-typescript';
+import {Table, Column, Model, CreatedAt, UpdatedAt, AllowNull, IsUUID, PrimaryKey, NotNull, BeforeCreate, BeforeUpdate, Length, DataType, AfterCreate, AfterUpdate, IsEmail, Unique, HasOne, HasMany} from 'sequelize-typescript';
 
 import {hashedPassword} from '../../utils/password'
 import PersonDetail from '../PersonDetail/PersonDetail'
@@ -11,14 +11,10 @@ class Person extends Model<Person> {
     static encryptPassword = encryptPassword
 
     @IsUUID(4) @PrimaryKey @Unique @Column
-    person_id: number;
+    id: number;
     
-    @AllowNull(false) @Column
-    first_name: string;
-    
-    @AllowNull(false) @Column 
-    last_name: string;
-
+    @AllowNull(false) @IsEmail @Unique @Column 
+    email: string;
     @Length({min: 6, msg: 'password must be at least 6 characters'})
     @Column({ type: DataType.STRING, allowNull: false })
     password: string;
@@ -26,12 +22,19 @@ class Person extends Model<Person> {
     @AllowNull(true) @Unique @Column 
     username?: string;
     
-    @AllowNull(false) @IsEmail @Unique @Column 
-    email: string;
+    @AllowNull(true) @Column
+    first_name?: string;
+    
+    @AllowNull(true) @Column 
+    last_name?: string;
 
     @HasOne(() => PersonDetail)
     person_detail?: PersonDetail
 
+    //jointable is person_asset
+    assets: string
+    asset_length: number
+    
     @CreatedAt created_at: number;
     
     @UpdatedAt updated_at: number;

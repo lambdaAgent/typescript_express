@@ -24,6 +24,7 @@ const HttpError = {
     },
     handle4xxAnd5xx(err, _:Request, res:Response, __){
         res.status(err['status'] || 500);
+        err.time = err.time || new Date().getTime()
         //4xx
         if(err.status >= 400 && err.status < 500){
             logger.error(`${err.time} >>>`, err.message) //hide the stacktrace

@@ -19,12 +19,9 @@ const Db_blog = new Sequelize( {
       acquire: 30000,
       idle: 10000
     },
-
     omitNull: true,
-    modelPaths: [__dirname +'/../model/**/*.ts']
-});
-
-
+    modelPaths: [__dirname +'/../Model/**/*.ts']
+})
 
 export { 
     Db_blog

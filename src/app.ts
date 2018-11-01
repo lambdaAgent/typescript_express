@@ -77,6 +77,9 @@ import HttpError from './Error/HttpError/HttpError';
         logger.info(`server listening on port: ${config.server.port}`);
 
         Db_blog.authenticate()
-                .then(() => logger.info('Db_blog Connection has been established successfully.'))
+                .then(() => {
+                    logger.info('Db_blog Connection has been established successfully.')
+                    logger.info('DB MODEL' + JSON.stringify(Db_blog.models))
+                })
                 .catch(err => logger.error('Db_blog Unable to connect to the database:', err));
     }); 

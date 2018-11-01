@@ -1,5 +1,5 @@
 import { Db_blog } from '../utils/dbUtils'
-import Person from '../model/Person/Person';
+import Person from '../Model/Person/Person';
 import PersonDetail from '../Model/PersonDetail/PersonDetail'
 import logger = require('../utils/logger');
 import sequelize = require('sequelize');
@@ -17,20 +17,31 @@ export default class PersonService {
     }
     static registerUser(email:string, password:string): Promise<any> {
         return new Promise((resolve, reject) => {
+            let recentlyCreatedUserDetailId, recentlyCreatedUserId;
             Db_blog.transaction(function (t:sequelize.Transaction) {
-                return PersonDetail.create({
-                    //TODO: index belongs_to_person on person_detail table
-                    belongs_to_person: email,
-                    email
-                }, {transaction: t}).then(function (userDetail:PersonDetail) {
                 return Person.create({
-                    belongs_to_person: userDetail.id,
-                    email, password
-                }, {transaction: t});
+                    email,
+                    password
+                }, {transaction: t}).then(function (user:Person) {
+                    recentlyCreatedUserId = user.id
+                    return PersonDetail.create({
+                        person_id: user.id,
+                        email, type:'user'
+                    }, {transaction: t})
+                    .then((userDetail:PersonDetail) => {recentlyCreatedUserDetailId = userDetail.id});
                 });
-            }).then(function (result) {
+            }).then(function (_) {
                 logger.info(`registered User with ${email} at ${new Date().getTime()}`)
-                resolve(result)
+                resolve(true)
+                // update user with person detail
+                PersonDetail
+                  .findOne({where: {id: recentlyCreatedUserDetailId}})
+                  .then((userDetail:PersonDetail|null):void => {
+                      if(!userDetail) reject(`Failed to link user ${recentlyCreatedUserId} with PersonDetail ${recentlyCreatedUserDetailId}` )
+                      userDetail!.person_id = recentlyCreatedUserDetailId
+                      userDetail!.save()
+                  })
+
             }).catch(function (err) {
                 logger.error(`Error registering user with ${email} at ${new Date().getTime()}`)
                 reject(err)
