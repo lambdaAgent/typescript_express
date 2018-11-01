@@ -1,7 +1,8 @@
 import { Router, Request, Response } from 'express';
-import { TokenUtil } from '../Token/Token';
 import PathDetailUtil from '../utils/PathDetail';
 import Roles from '../Token/Roles';
+import { TokenUtil } from '../Token/Token';
+
 const config = require('config')
 const algorithm = 'aes-256-ctr';
 const passwordForBody = config.token.passwordForBody

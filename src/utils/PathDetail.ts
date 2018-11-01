@@ -17,7 +17,7 @@ export class RouteDetail {
     }
 }
 
-class PathDetailUtil {
+export class PathDetailUtil {
     static pathDetail = {}
     static getRouteDetail(pathname){
         return this.pathDetail[pathname]

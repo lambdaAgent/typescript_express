@@ -1,7 +1,8 @@
-import {Table, Column, Model, CreatedAt, UpdatedAt, AllowNull, IsUUID, PrimaryKey, NotNull, BeforeCreate, BeforeUpdate, Length, DataType, AfterCreate, AfterUpdate, IsEmail, Unique, HasOne, HasMany} from 'sequelize-typescript';
+import {Table, Column, Model, CreatedAt, UpdatedAt, AllowNull, IsUUID, PrimaryKey, NotNull, BeforeCreate, BeforeUpdate, Length, DataType, AfterCreate, AfterUpdate, IsEmail, Unique, HasOne, HasMany, BelongsTo, ForeignKey} from 'sequelize-typescript';
 
 import {hashedPassword} from '../../utils/password'
 import PersonDetail from '../PersonDetail/PersonDetail'
+import Asset from '../Asset/Asset'
 
 @Table({timestamps: true, tableName: "person", schema: "core"})
 class Person extends Model<Person> {
@@ -22,12 +23,6 @@ class Person extends Model<Person> {
     @AllowNull(true) @Unique @Column 
     username?: string;
     
-    @AllowNull(true) @Column
-    first_name?: string;
-    
-    @AllowNull(true) @Column 
-    last_name?: string;
-
     @HasOne(() => PersonDetail)
     person_detail?: PersonDetail
 
@@ -39,6 +34,15 @@ class Person extends Model<Person> {
     
     @UpdatedAt updated_at: number;
 
+    // ========== Relationship =============
+
+    // has Many with social_media
+    // @HasMany(() => {})    
+    // social_media_id?: string[]
+
+    // has many assets    
+    @HasMany(() => Asset)
+    asset?: Asset
     
 }
 
