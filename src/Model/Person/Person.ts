@@ -15,10 +15,12 @@ class Person extends Model<Person> {
     id: number;
     
     @AllowNull(false) @IsEmail @Unique @Column 
-    email: string;
+    email: string
     @Length({min: 6, msg: 'password must be at least 6 characters'})
     @Column({ type: DataType.STRING, allowNull: false })
-    password: string;
+    password: string
+    @AllowNull(false) @Column 
+    role: string
 
     @AllowNull(true) @Unique @Column 
     username?: string;
@@ -46,8 +48,7 @@ class Person extends Model<Person> {
     
 }
 
-export default Person;
-
+export default Person
 
 //helpers
 export function encryptPasswordIfChanged(user:Person) {

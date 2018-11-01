@@ -13,12 +13,13 @@ import { Db_blog } from './utils/dbUtils'
 import {TokenUtil} from './Token/Token'
 
 // model
-import Person from './model/Person/Person'
+import Person from './Model/Person/Person'
 import TokenError from './Error/TokenError';
 
 //import controllers
 import indexRoute from './controller/mainController'
 import debugRoute from './controller/debugController'
+import assetRoute from './controller/assetController'
 import HttpError from './Error/HttpError/HttpError';
 
 // import * as healthcheckController from './controllers/controller-healthcheck';
@@ -55,6 +56,7 @@ import HttpError from './Error/HttpError/HttpError';
 
 // ROUTES
     app.use(indexRoute);  // tell the app this is the router we are using
+    app.use(assetRoute)
     if(process.env.NODE_ENV !== 'production'){
         app.use(debugRoute)
     }

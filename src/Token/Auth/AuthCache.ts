@@ -6,6 +6,7 @@ export class AuthToken {
             this[key] = objArgs[key]
         })
     }
+    person_id: number
     email:string
     expires:number
     data?: string|DataToken
@@ -28,6 +29,7 @@ export class AuthCacheUtil {
     static set(token:string, value:AuthToken){
         this.AuthCache[token] = value
     }
+
     static renew(oldToken:string, newToken:string, value:AuthToken, renewTime:number){
         if(!this.AuthCache.hasOwnProperty(oldToken)) return false
         delete this.AuthCache[oldToken]

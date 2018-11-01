@@ -3,6 +3,7 @@ import { AuthToken, AuthCacheUtil } from '../../Token/Auth/AuthCache'
 import Token, { DataToken, TokenUtil } from '../../Token/Token';
 import { RouteDetail, PathDetailUtil } from '../../utils/PathDetail'
 import { error400, errorContentType } from './errorController'
+import Roles, { Role } from '../../Token/Roles';
 
 export default authorizeUser
 export function authorizeUser(path:string){
@@ -48,10 +49,21 @@ export function validateToken(req, res, next) {
     if(Object.keys(body).length === 0) return errorContentType(res)
     if(!("token" in body) || !body.token ) return res.status(401).json({message:'Token is not valid'})
     const token = body.token
-    const data = AuthCacheUtil.get(token) 
+    const data:AuthToken|boolean = AuthCacheUtil.get(token)
     if(data) {
         req.dataToken = data
         next()
     }
     else return res.status(401).json({message:'Token is not valid'})
+}
+
+export function matchRolesFromString(rolename:string): Role|null{
+    let matchedRole:Role|null = null
+    Object.keys(Roles).forEach((key:string) => {
+        if( (Roles[key] as Role).name === rolename){
+            matchedRole = Roles[key]
+        }
+    })[0];
+    
+    return matchedRole
 }

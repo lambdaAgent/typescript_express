@@ -3,7 +3,7 @@ import {Role} from './Roles'
 
 type DataToken = {
     role: Role,
-    issuerEmail: string,
+    ownerEmail: string,
 }
 class Token {
     constructor(data, expiredIn){

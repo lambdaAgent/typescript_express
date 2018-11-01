@@ -15,7 +15,7 @@ export default class PersonService {
             .catch(reject)
         })
     }
-    static registerUser(email:string, password:string): Promise<any> {
+    static registerUser(email:string, password:string): Promise<string> {
         return new Promise((resolve, reject) => {
             let recentlyCreatedUserDetailId, recentlyCreatedUserId;
             Db_blog.transaction(function (t:sequelize.Transaction) {
@@ -32,7 +32,7 @@ export default class PersonService {
                 });
             }).then(function (_) {
                 logger.info(`registered User with ${email} at ${new Date().getTime()}`)
-                resolve(true)
+                resolve(recentlyCreatedUserId)
                 // update user with person detail
                 PersonDetail
                   .findOne({where: {id: recentlyCreatedUserDetailId}})
