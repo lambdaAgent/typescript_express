@@ -39,6 +39,7 @@ export function validate(req:Request): Promise<TokenError|boolean>{
         if(!req.headers.authorization || typeof req.headers.authorization === 'object') {
             return resolve(TokenError.TOKEN_INVALID)
         }
+        console.log(req.headers)
         const token:string = req.headers.authorization as string
         verify(token)
             .then(decoded => {

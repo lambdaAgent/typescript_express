@@ -4,6 +4,7 @@ import {hashedPassword} from '../../utils/password'
 import PersonDetail from '../PersonDetail/PersonDetail'
 import Asset from '../Asset/Asset'
 
+
 @Table({timestamps: true, tableName: "person", schema: "core"})
 class Person extends Model<Person> {
     @BeforeCreate
@@ -16,6 +17,7 @@ class Person extends Model<Person> {
     
     @AllowNull(false) @IsEmail @Unique @Column 
     email: string
+    
     @Length({min: 6, msg: 'password must be at least 6 characters'})
     @Column({ type: DataType.STRING, allowNull: false })
     password: string

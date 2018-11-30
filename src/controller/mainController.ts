@@ -10,24 +10,102 @@ import PathDetailUtil, { RouteDetail } from '../utils/PathDetail'
 import PersonService from '../Service/PersonService'
 import logger = require('../utils/logger');
 import { authorizeUser, validateLoginBody, validateToken, matchRolesFromString } from './helperController/authorizeUser'
-function createCommonUserDto(user){
-    return user;
-    return {
-        first_name:user.first_name,
-        last_name: user.last_name
-    }
-}
+import RequestMapping from '../utils/RequestMapping/RequestMapping'
 
 const router: Router = Router();
 
+const RM = RequestMapping.of(router);
+
+//'detail/{id}?searchBy=asdf&ascending=true'
+
+const loginDTO = {
+    username: {
+        presence: true,
+        email:true,
+    },
+    password: {
+        presence: true,
+        length: {minimum: 6}
+    },
+    isAdmin: {
+        presence:true
+    },
+    worth: {
+        numericality: {greaterThan: 0}
+    }
+}
+
+const schema = {
+    data: {
+        presence: true,
+    },
+    "data.worth": {numericality: {greaterThan: 0}},
+    message: {
+        presence: true
+    }
+}
+
+RM.get('/asdf/:id/:hello')
+  .PathVariable("id", {required: true, type: String})
+  .PathVariable("hello", {required: true, type: String})
+  .AuthorizeHeader({type: 'basic', validator: () => {return true}})
+  .RequestParam("ascending", {required:true, type: Boolean }).RequestParam("searchBy", {required:true, type: String})
+  .RequestBody({ valid: true, schema: loginDTO })
+  .ResponseBody({ valid: true, 
+    200: schema,
+    400: {}
+  })
+  .Apply((validatorResult, req, res, next) => {
+      console.log(validatorResult);
+      //@ts-ignore
+      validatorResult.worth = -1;
+      const responseDTO = {
+          data: validatorResult,
+          message: ''
+      };
+
+      //@ts-ignore
+      res.status(200).json(responseDTO)
+  })
+
+
+
+
+RM.post('/asdf/:id/:hello')
+  .AuthorizeHeader({ validator: () => {return true}})
+  .PathVariable("id", {required: true, type: String })
+  .PathVariable("hello", {required: true, type: String})
+  //@ts-ignore
+  .RequestParam("ascending", {required:true, type: Boolean })
+  .RequestParam("searchBy", {required:true, type: String})
+  .RequestBody({valid: true, schema: loginDTO })
+  .ResponseBody({
+    valid: true, 
+    200: schema,
+    400: {}
+  })
+  .Apply((validatorResult, req, res, next) => {
+      console.log(validatorResult);
+      //@ts-ignore
+      validatorResult.worth = -1;
+      const responseDTO = {
+          data: validatorResult,
+          message: ''
+      };
+
+      //@ts-ignore
+      res.status(200).json(responseDTO)
+  })
+
 PathDetailUtil.registerRoute('/', 'get', Roles.ALL)
 router.get('/', 
-    (_: Request, res: Response) => {
+    (req: Request, res: Response) => {
+        console.log(req)
         res.status(200).json('Hello, World!');
     });
 
 PathDetailUtil.registerRoute('/detail', 'post', Roles.User)
-router.post('/detail', validateToken, authorizeUser('/detail'), 
+router.post('/detail/{as}', validateToken, authorizeUser('/detail'), 
     (req: Request, res: Response, next) => {
         //get email from token??
         const token:string = (req as any).dataToken
@@ -37,6 +115,7 @@ router.post('/detail', validateToken, authorizeUser('/detail'),
                 requester = decoded.data
                 Person.findOne({where: {email:decoded.data.ownerEmail}})
             })
+            //@ts-ignore
             .then((user:Person|null)=> {
                 if(!user) return res.status(404).json({message: 'User not found'})
                 if(requester!.role === Roles.Admin) {
@@ -44,16 +123,16 @@ router.post('/detail', validateToken, authorizeUser('/detail'),
                     return res.status(200).json({})
                 } else {
                     // if not admin, need to filter the user
-                    user = createCommonUserDto(user)
                 }
             })
             .catch(err => HttpError.handleDatabaseError(err, req, res, next))
     })
 
 PathDetailUtil.registerRoute('/login', 'post', Roles.ALL)
-router.post('/login', validateLoginBody, authorizeUser('/login'), 
+router.post('/login', validateLoginBody, 
     (req:Request, res: Response, next) => {
         const {email, password} = req.body
+        console.log(req.headers)
         Person.findOne({where: {email}})
         .then(person => {
             if(!person) return res.status(404).json({message: 'This email is not registered'})
@@ -141,3 +220,4 @@ function setTokenToAuthCache(tokenObj:TokenObject, email: string):Promise<string
         resolve(signedToken)
     })
 }
+

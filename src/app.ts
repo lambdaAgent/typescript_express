@@ -33,25 +33,29 @@ import HttpError from './Error/HttpError/HttpError';
 // INTERCEPT
     app.use((req:Request, res:Response, next) => {
         // Intercept here
-        TokenUtil.validate(req)
-        .then((validate:TokenError|boolean) => {
-            if(validate instanceof TokenError) {
-                res.status(400).json({message: ''})
-                return Promise.reject(JSON.stringify(req) + validate)
-            }
-            return Promise.resolve(req)
-        })
-        .then(request => { 
-            TokenUtil.authenticate(request).then((authenticated:TokenError|boolean) => {
-                if(authenticated instanceof TokenError) {
-                    res.status(400).json({message: ''})
-                    return Promise.reject(JSON.stringify(request) + authenticated)
-                }
-                return Promise.resolve(authenticated)
-            })
-        })
-        .then(_ => next())
-        .catch(logger.error)
+        // TokenUtil.validate(req)
+        // if(!req.headers.authorization || typeof req.headers.authorization === 'object') {
+        //    return resolve(TokenError.TOKEN_INVALID)
+        // }
+        // .then((validate:TokenError|boolean) => {
+        //     if(validate instanceof TokenError) {
+        //         res.status(400).json({message: ''})
+        //         return Promise.reject(JSON.stringify(req) + validate)
+        //     }
+        //     return Promise.resolve(req)
+        // })
+        // .then(request => { 
+        //     TokenUtil.authenticate(request).then((authenticated:TokenError|boolean) => {
+        //         if(authenticated instanceof TokenError) {
+        //             res.status(400).json({message: ''})
+        //             return Promise.reject(JSON.stringify(request) + authenticated)
+        //         }
+        //         return Promise.resolve(authenticated)
+        //     })
+        // })
+        // .then(_ => next())
+        // .catch(logger.error)
+        next();
     })
 
 // ROUTES
@@ -72,8 +76,7 @@ import HttpError from './Error/HttpError/HttpError';
     app.use(HttpError.handle404);
     app.use(HttpError.handle4xxAnd5xx);
     process.on('unhandledRejection', (reason) => logger.error(new Date().getTime(), reason))
-
-
+    console.log(assetRoute.stack[0].route.stack[0].handle);
 // START
     app.listen(config.server.port, function () {
         logger.info(`server listening on port: ${config.server.port}`);
@@ -85,3 +88,4 @@ import HttpError from './Error/HttpError/HttpError';
                 })
                 .catch(err => logger.error('Db_blog Unable to connect to the database:', err));
     }); 
+

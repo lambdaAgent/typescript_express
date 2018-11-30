@@ -1,5 +1,5 @@
-const config = require('config');
-const winston = require('winston');
+const config  = require('config');
+import * as winston from 'winston';
 
 //timestamp for logger
 const logger = new(winston.Logger)({
@@ -15,5 +15,4 @@ const logger = new(winston.Logger)({
 logger.cli();
 // logger level is set in the config
 logger.level = config.loggerLevel;
-
 export = logger;

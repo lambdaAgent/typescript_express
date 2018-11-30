@@ -11,7 +11,6 @@ PathDetailUtil.registerRoute(getAssetUrl, 'post', Roles.User)
 router.post(getAssetUrl, validateToken, authorizeUser(getAssetUrl),
 (req:Request, res: Response, next) => {
     //find and check if user is the owner of the asset
-    const 
 })
 
 const addAssetUrl = `${url}/add`
