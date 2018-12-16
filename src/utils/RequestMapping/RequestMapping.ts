@@ -1,6 +1,7 @@
 import { Router, NextFunction, Request, Response } from "express";
-import constructObjectFromRefUrl from './constructObjectFromRefUrl';
-import createDocumentation, { SprinkleDocDescription } from './createDocumentation'
+import constructObjectFromRefUrl from '../helper/constructObjectFromRefUrl';
+import StripUnknown from '../helper/StripUnknown'
+import createDocumentation, { SprinkleDocDescription } from '../helper/createDocumentation'
 import { error } from "util";
 
 import * as Joi from 'joi'
@@ -44,7 +45,7 @@ class RequestMap {
 
 declare class RequestBodyOption{
     valid:boolean;
-    schema:Object;
+    schema:Joi.ObjectSchema;
     '@sprinkle'?:SprinkleDocDescription;
 }
 declare class AuthorizeOption{
@@ -75,11 +76,10 @@ export class RequestValidator {
     //@ts-ignore
     _requestParams:Object = {};
     _requestBody?: {
-        valid: boolean,
-        schema: object, // ConstraintObject
+        schema: Joi.ObjectSchema, // ConstraintObject
     };
     _requestCriteria?: {
-        schema: object, // ConstraintObject
+        schema: Joi.ObjectSchema, // ConstraintObject
     }
     _responseBody?:any = {}; // {valid:boolean, 200: schemaObject}
     _prefixError = () => `Error on ${this._HttpMethod.toUpperCase()}, ${this._HttpPathName}. Reason: `;
@@ -98,7 +98,7 @@ export class RequestValidator {
     _executeRequestParam(req:Request):ExecutionResult {
         let errorMessages: string[] = [];
         let result: Object = {};
-        let queryString:string = req.url.split('?')[1];
+        const queryString:string = req.url.split('?')[1];
         let objToValidate = {}
         if(Object.keys(this._requestParams).length <= 0) return {errorMessages, isValid: true, result};
         if(!queryString)  return {errorMessages: ['No Query String'], isValid:false, result} 
@@ -126,12 +126,24 @@ export class RequestValidator {
     _executePathVariable(req:Request):ExecutionResult{
         let errorMessages: string[] = [];
         let result: Object = {};
-        let path = req.path;
-        let objToValidate = {}
         if(Object.keys(this._pathVariables).length <= 0) return {errorMessages, isValid: true, result};
+
+        let objToValidate = {}
+        const path = req.url.split('/').slice(1);
+        const objMap = constructObjectFromRefUrl(this._HttpPathName);
+        const isQueryStringValidating = Object.keys(objMap).length > 0;
+        if(!isQueryStringValidating){
+            return {isValid:true, errorMessages:[], result:{}}
+        }
+        Object.keys(this._pathVariables).forEach(pathname => {
+            const position = objMap[pathname];
+            let value = path[position];
+                value = value.indexOf('?') ? value.split('?')[0] : value;
+            objToValidate[pathname] = value;
+        })
+
         let schema:Joi.Schema = Joi.object().keys(this._pathVariables as Joi.SchemaMap).unknown();
 
-        console.log("path", path)
         const objError = Joi.validate(objToValidate, schema, {abortEarly: false});
         if(!objError.error){
             return {errorMessages, isValid: true,
@@ -148,26 +160,25 @@ export class RequestValidator {
     }
     _executeRequestBody(req:Request):ExecutionResult{
         if(!this._requestBody) return {errorMessages: [], isValid: true, result:{}};
-        let objError;
+        let result;
         const objToValidate = req.body;
         const schema = this._requestBody.schema;
-        if(schema) objError = Joi.validate(objToValidate, schema, { abortEarly: false });
-        console.log(objError.error)
+        if(schema) result = Joi.validate(objToValidate, schema, { abortEarly: false });
 
         let errorMessages:string[] = [];
-        (objError.error) && objError.error.details.forEach((err:any) => {
+        (result.error) && result.error.details.forEach((err:any) => {
             const message = err.message.split(" ").slice(1).join(" ");
             const pathname = err.path[0];
             errorMessages.push(pathname+ " " + message)
         });
+        let stripUnknownKeys = StripUnknown.target(schema).value(result.value)
         const isValid = errorMessages.length === 0;
-        // need to flatten the errorMessages
-        return { errorMessages, isValid, result: isValid ? objToValidate : {} };
+        return { errorMessages, isValid, result : stripUnknownKeys}
     }
     _executeResponseBody(obj:any, statusCode:string|number){
         const schema = this._responseBody[statusCode]
         if(!schema) return { isValid: false, objError: {SchemaNotFound: 'No Schema provided for response status ' + statusCode }}
-        const objError = Joi.validate(obj, schema);
+        const objError = Joi.validate(obj, schema, {abortEarly: false, stripUnknown: true });
         const isValid = objError.error ? false : true;
 
         return { isValid, objError };
@@ -177,61 +188,39 @@ export class RequestValidator {
     }
 
     _executeRequestCriteria(req:Request){
-        if(!this._requestCriteria) return {errorMessages: [], isValid: true, result:{}};
-        let _result = {};
+        let errorMessages: string[] = [];
         let queryString:string = req.url.split('?')[1];
-        if(!queryString)  return {errorMessages: ['No Query String'], isValid:false, result:_result} 
+        let objToValidate = {}
+        if(!this._requestCriteria) return { errorMessages, isValid:true, result:{} }
+        if(!queryString)  return {errorMessages: ['No Query String'], isValid:false, result:{}} 
+        let schema:Joi.Schema = this._requestCriteria.schema;
 
-        let objToValidate = {};
-        queryString.split('&').forEach(query => {
-            console.log('query', query)
-            const [key, value] = query.split('=');
-            objToValidate[key] = value
+        queryString.split('&').forEach(keyValue => {
+            const [key, value] = keyValue.split('=');
+            objToValidate[key] = value;
         });
-
        
-        const schema = this._requestCriteria.schema;
-        //@ts-ignore
-        const sc = new schema();
-        //@ts-ignore
-        console.log('objToValidate', Object.keys(sc))
-        console.log(sc)
-        
-        let objError:Object = {};
-        if(schema) objError = Joi.validate(objToValidate, schema);
-
-        // only include the fields that exist in criteriaschema;
-        let resultObject = {};
-        Object.keys(schema).forEach(key => {
-            resultObject[key] = objToValidate[key]
-        })
-
-        if(Object.keys(objToValidate).length <= 0) objError = {'error': 'No Request Criteria found'}
-        if(Object.keys(objToValidate).length === 0) objError = {'error': 'No Request Criteria found'}
-
-        let errorMessages:string[] = [];
-        (objError) && Object.keys(objError).forEach(key => {
-            objError[key].length > 0 && objError[key].forEach(err => {
-                if(Array.isArray(err)) {
-                    return err.forEach(e => errorMessages.push(e));
-                } else {
-                    return errorMessages.push(err);
-                }
-            })
+        let result = Joi.validate(objToValidate, schema, {abortEarly: false });
+        (result.error) && result.error.details.forEach((err:any) => {
+            const message = err.message.split(" ").slice(1).join(" ");
+            const pathname = err.path[0];
+            errorMessages.push(pathname+ " " + message)
         });
+        let stripUnknownKeys = StripUnknown.target(schema).value(result.value)
         const isValid = errorMessages.length === 0;
-        // need to flatten the errorMessages
-        return { errorMessages, isValid, result: isValid ? resultObject : {} };
+        return { errorMessages, isValid, result : stripUnknownKeys}
     }
 
-    RequestCriteria(option?: {schema:any}): RequestValidator{
+    RequestCriteria(schema:Joi.ObjectSchema): RequestValidator{
         const self = this;
 
         (function validateRequestBody(){
-            if(!option) throw new Error(self._prefixError() + 'No arguments is provided.')
+            if(!schema) throw new Error(self._prefixError() + 'No schema is provided.')
         })()
+        schema.unknown();
+        
         this._requestCriteria = {
-            schema: option.schema
+            schema
         };
         return this;
     }
@@ -259,7 +248,6 @@ export class RequestValidator {
             if(option.valid && !option.schema) throw new Error(self._prefixError() + 'No schema to Validate request body');
         })()
         this._requestBody = {
-            valid: option.valid ? option.valid : (option.schema ? true : false),
             schema: option.schema
         };
         return this;

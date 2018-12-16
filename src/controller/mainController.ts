@@ -20,26 +20,30 @@ const RM = RequestMapping.of(router);
 
 //'detail/{id}?searchBy=asdf&ascending=true'
 
-const loginDTO = {
+const loginDTO = Joi.object().keys({
     username: Joi.string().email().required(),
     password: Joi.string().min(6).required(),
     isAdmin: Joi.boolean().required(),
-}
+}).unknown();
 
 const schema = {
     data: Joi.any().required(),
     message: Joi.required()
 }
 
-class PersonCriteria {
+const PersonCriteria:Joi.ObjectSchema = Joi.object().keys({
+    ascending: Joi.bool().required(),
+    searchBy: Joi.string().required()
+})
 
-}
 
 RM.post('/asdf/:id/:username')
-  .PathVariable("id", Joi.string().required()   )
+  .PathVariable("id", Joi.string().required())
+  .PathVariable("username", Joi.string().required())
   .RequestParam("ascending", Joi.boolean().required())
   .RequestParam("searchBy", Joi.string().required())
-//   .RequestBody({ valid: true, schema: loginDTO })
+  .RequestCriteria(PersonCriteria)
+  .RequestBody({ valid: true, schema: loginDTO })
   .ResponseBody({ valid: true, 
     200: schema,
     400: {}
