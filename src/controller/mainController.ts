@@ -2,20 +2,12 @@ import { IsEmail } from 'sequelize-typescript';
 import * as Joi from 'joi';
 import { Router, Request, Response } from 'express';
 // import PersonDetail from '../model/Detail/Detail';
-import Person from '../Model/Person/Person';
-import HttpError from '../Error/HttpError'
-import * as Password from '../utils/password'
-import Token, { DataToken, TokenUtil } from '../Token/Token';
-import {AuthCacheUtil, AuthToken} from '../Token/Auth/AuthCache'
-import Roles, { Role } from '../Token/Roles';
-import PathDetailUtil, { RouteDetail } from '../utils/PathDetail'
-import PersonService from '../Service/PersonService'
 import logger = require('../utils/logger');
 import { authorizeUser, validateLoginBody, validateToken, matchRolesFromString } from './helperController/authorizeUser'
 import RequestMapping from '../utils/RequestMapping/RequestMapping'
 
 const router: Router = Router();
-
+const basepath = '/'
 const RM = RequestMapping.of(router);
 
 //'detail/{id}?searchBy=asdf&ascending=true'
@@ -87,4 +79,6 @@ RM.post('/asdf/:id/:hello')
       res.status(200).json(responseDTO)
   })
 
-export default router;
+module.exports = function register(app){
+    app.use(basepath, router)
+}

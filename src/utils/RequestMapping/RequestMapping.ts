@@ -2,7 +2,7 @@ import { RequestValidator } from './RequestMapping';
 import { Router, NextFunction, Request, Response } from "express";
 import constructObjectFromRefUrl from '../helper/constructObjectFromRefUrl';
 import StripUnknown from '../helper/StripUnknown'
-import createSwagger from '../helper/createSwagger'
+import Swagger from '../helper/Swagger'
 import createDocumentation, { SprinkleDocDescription } from '../helper/createDocumentation'
 import { error } from "util";
 
@@ -196,7 +196,7 @@ export class RequestValidatorImpl implements RequestValidator{
         let objToValidate = {}
         if(!this._requestCriteria) return { errorMessages, isValid:true, result:{} }
         if(!queryString)  return {errorMessages: ['No Query String'], isValid:false, result:{}} 
-        let schema:Joi.Schema = this._requestCriteria.schema;
+        let schema:Joi.ObjectSchema = this._requestCriteria.schema;
 
         queryString.split('&').forEach(keyValue => {
             const [key, value] = keyValue.split('=');
@@ -272,8 +272,7 @@ export class RequestValidatorImpl implements RequestValidator{
         return this;
     }
     Swagger(){
-        this._createSwagger = true;
-        createSwagger(this)
+       
         return this;
     }
     

@@ -8,10 +8,6 @@ import multer from 'multer'; // v1.0.5
 // const upload = multer(); // for parsing multipart/form-data
 const app: express.Express = express();
 
-//import controllers
-import indexRoute from './controller/mainController'
-import HttpError from './Error/HttpError';
-
 // MIDDLEWARE
     app.use(cors());
     app.use(bodyParser.json());
@@ -46,7 +42,10 @@ import HttpError from './Error/HttpError';
     })
 
 // ROUTES
-app.use(indexRoute);  // tell the app this is the router we are using
+
+//import controllers
+require('./controller/mainController')(app);
+import HttpError from './Error/HttpError';
 
 app.use(HttpError.handle404);
 app.use(HttpError.handle4xxAnd5xx);
