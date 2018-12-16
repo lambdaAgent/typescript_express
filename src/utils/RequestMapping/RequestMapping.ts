@@ -1,45 +1,36 @@
+import { RequestValidator } from './RequestMapping';
 import { Router, NextFunction, Request, Response } from "express";
 import constructObjectFromRefUrl from '../helper/constructObjectFromRefUrl';
 import StripUnknown from '../helper/StripUnknown'
+import createSwagger from '../helper/createSwagger'
 import createDocumentation, { SprinkleDocDescription } from '../helper/createDocumentation'
 import { error } from "util";
 
 import * as Joi from 'joi'
 
-class ValidatorOption {
-    '@sprinkle'?:SprinkleDocDescription;
-    required: boolean;
-    type: Function;
-    as?: string
-}
-
-
 export default class RequestMapping {
-    static of(app:Router): RequestMap{
+    static of(app:Router): RequestMap {
         return new RequestMap(app)
     }
 }
 
-
 class RequestMap {
-    _route:Router;
-    _routeDocs:any[] = [];
+    private _route:Router;
     constructor(route:Router){ 
         this._route = route;
-        this._routeDocs = [];
     }
     get(pathname:string):RequestValidator{
-        const req = new RequestValidator(this._route, 'get', pathname);
+        const req = new RequestValidatorImpl(this._route, 'get', pathname);
         return req
     }
     post(pathname:string):RequestValidator{
-        return new RequestValidator(this._route, 'post', pathname);
+        return new RequestValidatorImpl(this._route, 'post', pathname);
     }
     put(pathname:string):RequestValidator{
-        return new RequestValidator(this._route, 'put', pathname);
+        return new RequestValidatorImpl(this._route, 'put', pathname);
     }
     delete(pathname:string):RequestValidator{
-        return new RequestValidator(this._route, 'delete', pathname);
+        return new RequestValidatorImpl(this._route, 'delete', pathname);
     }
 }
 
@@ -61,12 +52,24 @@ declare class ExecutionResult {
     result:{}
 }
 
-export class RequestValidator {
+export interface RequestValidator{
+    RequestBody(option?:RequestBodyOption):RequestValidator;
+    AuthorizeHeader(option: AuthorizeOption):RequestValidator;
+    RequestCriteria(schema:Joi.ObjectSchema): RequestValidator;
+    Apply(callback:(RESULT:Object, req:Request, res:Response, next:NextFunction)=>void):RequestValidator;
+    Swagger():RequestValidator;
+    RequestParam(queryvar:string, joiValidation: Joi.Schema):RequestValidator;
+    PathVariable(pathvar:string, joiValidation:Joi.Schema):RequestValidator ;
+    ResponseBody(obj):RequestValidator;
+}
+
+export class RequestValidatorImpl implements RequestValidator{
     constructor(_route:Router, _HttpMethod:string, pathname:string){
         this._route = _route;
         this._HttpMethod = _HttpMethod;
         this._HttpPathName = pathname;
     }
+    _createSwagger: Boolean = false;
     _route:Router;
     _HttpMethod:string;
     _HttpPathName:string;
@@ -263,15 +266,21 @@ export class RequestValidator {
         this._pathVariables[pathvar] = joiValidation;
         return this;
     }
-    ResponseBody(obj){
+    ResponseBody(obj):RequestValidator{
         if("valid" in obj && obj.valid && !obj[200]) throw new Error(this._prefixError() + 'Response need to be validated but no schema')
         if(obj) this._responseBody = obj;
+        return this;
+    }
+    Swagger(){
+        this._createSwagger = true;
+        createSwagger(this)
         return this;
     }
     
     Apply(callback:(RESULT:Object, req:Request, res:Response, next:NextFunction)=>void):RequestValidator{
         const self = this;
         const {_route, _HttpMethod, _HttpPathName } = this;
+
         _route[_HttpMethod](_HttpPathName, (req:Request, res:Response, next:NextFunction) => {
             let RESULT = {};
             let errorMessages:Array<String> = [];
