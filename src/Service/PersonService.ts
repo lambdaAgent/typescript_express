@@ -4,7 +4,10 @@ import PersonDetail from '../Model/PersonDetail/PersonDetail'
 import logger = require('../utils/logger');
 import sequelize = require('sequelize');
 
+
+
 export default class PersonService {
+
     static IsEmailRegistered(email:string): Promise<boolean>{
         return new Promise((resolve, reject) => {
             Person.findOne({where: {email}})

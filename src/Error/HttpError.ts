@@ -1,6 +1,6 @@
 import {Request, Response} from 'express'
 import {ValidationError, ConnectionRefusedError, UniqueConstraintError} from 'sequelize';
-import logger = require('../../utils/logger');
+import logger = require('../utils/logger');
 
 const HttpError = {
     handleDatabaseError(err, req:Request, _:Response, next){

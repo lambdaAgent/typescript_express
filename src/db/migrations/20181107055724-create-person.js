@@ -8,8 +8,25 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
+      email: {
+        type: Sequelize.STRING,
+      },
       firstName: {
         type: Sequelize.STRING
+      },
+      password_hash: {
+        type: Sequelize.STRING,
+      },
+      role: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      username: {
+        type: Sequelize.STRING,
+        allowNull: true   
+      },
+      person_detail_id: {
+
       },
       createdAt: {
         allowNull: false,
@@ -19,6 +36,8 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE
       }
+   
+    
     });
   },
   down: (queryInterface, Sequelize) => {

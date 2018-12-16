@@ -21,6 +21,7 @@ class Person extends Model<Person> {
     @Length({min: 6, msg: 'password must be at least 6 characters'})
     @Column({ type: DataType.STRING, allowNull: false })
     password: string
+
     @AllowNull(false) @Column 
     role: string
 
@@ -39,11 +40,6 @@ class Person extends Model<Person> {
     @UpdatedAt updated_at: number;
 
     // ========== Relationship =============
-
-    // has Many with social_media
-    // @HasMany(() => {})    
-    // social_media_id?: string[]
-
     // has many assets    
     @HasMany(() => Asset)
     asset?: Asset

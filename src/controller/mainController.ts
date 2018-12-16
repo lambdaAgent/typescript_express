@@ -1,7 +1,9 @@
+import { IsEmail } from 'sequelize-typescript';
+import * as Joi from 'joi';
 import { Router, Request, Response } from 'express';
 // import PersonDetail from '../model/Detail/Detail';
 import Person from '../Model/Person/Person';
-import HttpError from '../Error/HttpError/HttpError'
+import HttpError from '../Error/HttpError'
 import * as Password from '../utils/password'
 import Token, { DataToken, TokenUtil } from '../Token/Token';
 import {AuthCacheUtil, AuthToken} from '../Token/Auth/AuthCache'
@@ -19,53 +21,38 @@ const RM = RequestMapping.of(router);
 //'detail/{id}?searchBy=asdf&ascending=true'
 
 const loginDTO = {
-    username: {
-        presence: true,
-        email:true,
-    },
-    password: {
-        presence: true,
-        length: {minimum: 6}
-    },
-    isAdmin: {
-        presence:true
-    },
-    worth: {
-        numericality: {greaterThan: 0}
-    }
+    username: Joi.string().email().required(),
+    password: Joi.string().min(6).required(),
+    isAdmin: Joi.boolean().required(),
 }
 
 const schema = {
-    data: {
-        presence: true,
-    },
-    "data.worth": {numericality: {greaterThan: 0}},
-    message: {
-        presence: true
-    }
+    data: Joi.any().required(),
+    message: Joi.required()
 }
 
-RM.get('/asdf/:id/:hello')
-  .PathVariable("id", {required: true, type: String})
-  .PathVariable("hello", {required: true, type: String})
-  .AuthorizeHeader({type: 'basic', validator: () => {return true}})
-  .RequestParam("ascending", {required:true, type: Boolean }).RequestParam("searchBy", {required:true, type: String})
-  .RequestBody({ valid: true, schema: loginDTO })
+class PersonCriteria {
+
+}
+
+RM.post('/asdf/:id/:username')
+  .PathVariable("id", Joi.string().required()   )
+  .RequestParam("ascending", Joi.boolean().required())
+  .RequestParam("searchBy", Joi.string().required())
+//   .RequestBody({ valid: true, schema: loginDTO })
   .ResponseBody({ valid: true, 
     200: schema,
     400: {}
   })
-  .Apply((validatorResult, req, res, next) => {
-      console.log(validatorResult);
-      //@ts-ignore
-      validatorResult.worth = -1;
-      const responseDTO = {
-          data: validatorResult,
-          message: ''
-      };
+  .Apply((validatorResult:any, req, res:any, next) => {
+        const criteria = validatorResult.criteria;
+        console.log("validatorResult", validatorResult)
+        const responseDTO = {
+            data: validatorResult,
+            message: ''
+        };    
 
-      //@ts-ignore
-      res.status(200).json(responseDTO)
+      res.status(200).validJson(responseDTO)
   })
 
 
@@ -73,12 +60,11 @@ RM.get('/asdf/:id/:hello')
 
 RM.post('/asdf/:id/:hello')
   .AuthorizeHeader({ validator: () => {return true}})
-  .PathVariable("id", {required: true, type: String })
-  .PathVariable("hello", {required: true, type: String})
-  //@ts-ignore
-  .RequestParam("ascending", {required:true, type: Boolean })
-  .RequestParam("searchBy", {required:true, type: String})
-  .RequestBody({valid: true, schema: loginDTO })
+//   .PathVariable("id", {required: true, type: String })
+//   .PathVariable("hello", {required: true, type: String})
+//   .RequestParam("ascending", {required:true, type: Boolean })
+//   .RequestParam("searchBy", {required:true, type: String})
+//   .RequestBody({valid: true, schema: loginDTO })
   .ResponseBody({
     valid: true, 
     200: schema,

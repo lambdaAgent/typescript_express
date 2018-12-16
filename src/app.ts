@@ -20,7 +20,10 @@ import TokenError from './Error/TokenError';
 import indexRoute from './controller/mainController'
 import debugRoute from './controller/debugController'
 import assetRoute from './controller/assetController'
-import HttpError from './Error/HttpError/HttpError';
+import HttpError from './Error/HttpError';
+
+import ModelMapper from './utils/ModelMapper'
+ModelMapper.of(Person);
 
 // import * as healthcheckController from './controllers/controller-healthcheck';
 // import * as sampleController from './controllers/controller-sample';
