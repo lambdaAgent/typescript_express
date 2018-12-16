@@ -8,25 +8,9 @@ import multer from 'multer'; // v1.0.5
 // const upload = multer(); // for parsing multipart/form-data
 const app: express.Express = express();
 
-// DbUtils
-import { Db_blog } from './utils/dbUtils'
-import {TokenUtil} from './Token/Token'
-
-// model
-import Person from './Model/Person/Person'
-import TokenError from './Error/TokenError';
-
 //import controllers
 import indexRoute from './controller/mainController'
-import debugRoute from './controller/debugController'
-import assetRoute from './controller/assetController'
 import HttpError from './Error/HttpError';
-
-import ModelMapper from './utils/ModelMapper'
-ModelMapper.of(Person);
-
-// import * as healthcheckController from './controllers/controller-healthcheck';
-// import * as sampleController from './controllers/controller-sample';
 
 // MIDDLEWARE
     app.use(cors());
@@ -62,33 +46,20 @@ ModelMapper.of(Person);
     })
 
 // ROUTES
-    app.use(indexRoute);  // tell the app this is the router we are using
-    app.use(assetRoute)
-    if(process.env.NODE_ENV !== 'production'){
-        app.use(debugRoute)
-    }
-    //healthcheck routes
-    // router.get('/', healthcheckController.healthcheck);
-    // router.get('/healthcheck', healthcheckController.healthcheck);
-    // // sampleController routes
-    // router.get('/servertime', sampleController.getTime);
-    // router.get('/transaction', sampleController.sampleTransaction);
+app.use(indexRoute);  // tell the app this is the router we are using
 
+app.use(HttpError.handle404);
+app.use(HttpError.handle4xxAnd5xx);
 
-//catch 404 and forward to error handler
-    app.use(HttpError.handle404);
-    app.use(HttpError.handle4xxAnd5xx);
-    process.on('unhandledRejection', (reason) => logger.error(new Date().getTime(), reason))
-    console.log(assetRoute.stack[0].route.stack[0].handle);
-// START
-    app.listen(config.server.port, function () {
-        logger.info(`server listening on port: ${config.server.port}`);
+process.on('unhandledRejection', (reason) => logger.error(new Date().getTime(), reason))
+app.listen(config.server.port, function () {
+    logger.info(`server listening on port: ${config.server.port}`);
 
-        Db_blog.authenticate()
-                .then(() => {
-                    logger.info('Db_blog Connection has been established successfully.')
-                    logger.info('DB MODEL' + JSON.stringify(Db_blog.models))
-                })
-                .catch(err => logger.error('Db_blog Unable to connect to the database:', err));
-    }); 
+    // Db_blog.authenticate()
+    //         .then(() => {
+    //             logger.info('Db_blog Connection has been established successfully.')
+    //             logger.info('DB MODEL' + JSON.stringify(Db_blog.models))
+    //         })
+    //         .catch(err => logger.error('Db_blog Unable to connect to the database:', err));
+}); 
 
