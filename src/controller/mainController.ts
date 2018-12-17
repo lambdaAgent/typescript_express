@@ -7,8 +7,8 @@ import { authorizeUser, validateLoginBody, validateToken, matchRolesFromString }
 import RequestMapping from '../utils/RequestMapping/RequestMapping'
 
 const router: Router = Router();
-const basepath = '/'
-const RM = RequestMapping.of(router);
+const basepath = '/person'
+const RM = RequestMapping.of(router, basepath);
 
 //'detail/{id}?searchBy=asdf&ascending=true'
 
@@ -24,8 +24,8 @@ const schema = {
 }
 
 const PersonCriteria:Joi.ObjectSchema = Joi.object().keys({
-    ascending: Joi.bool().required(),
-    searchBy: Joi.string().required()
+    // ascending: Joi.bool().required(),
+    searchBy: Joi.string().valid('ios', 'android').required()
 })
 
 
@@ -50,6 +50,7 @@ RM.post('/asdf/:id/:username')
 
       res.status(200).validJson(responseDTO)
   })
+  .Swagger()
 
 
 
@@ -80,5 +81,5 @@ RM.post('/asdf/:id/:hello')
   })
 
 module.exports = function register(app){
-    app.use(basepath, router)
+    app.use(router)
 }

@@ -1,36 +1,46 @@
+import { RequestParam } from './../helper/Swagger/Swagger';
+import * as SwaggerInterface from 'swagger-schema-official';
 import { RequestValidator } from './RequestMapping';
 import { Router, NextFunction, Request, Response } from "express";
 import constructObjectFromRefUrl from '../helper/constructObjectFromRefUrl';
 import StripUnknown from '../helper/StripUnknown'
-import Swagger from '../helper/Swagger'
+import Swagger, {PathDetail, PathParam, convertJoiParamToSwagger } from '../helper/Swagger/Swagger'
 import createDocumentation, { SprinkleDocDescription } from '../helper/createDocumentation'
-import { error } from "util";
-
 import * as Joi from 'joi'
+import logger = require('../logger');
 
 export default class RequestMapping {
-    static of(app:Router): RequestMap {
-        return new RequestMap(app)
+    static of(app:Router, basepath:string): RequestMap {
+        if(basepath[0] !== '/') throw new Error ('basepath must start with "/"');
+        if(basepath === '/') basepath = '';
+        return new RequestMap(app, basepath);
     }
 }
 
 class RequestMap {
     private _route:Router;
-    constructor(route:Router){ 
+    private _basepath:string;
+    private _swagger:Swagger;
+    constructor(route:Router, basepath:string){ 
         this._route = route;
+        this._basepath= basepath;
+        this._swagger = new Swagger();
+        this._swagger.basePath=basepath;
+        this._swagger.swagger = "2.0";
+        this._swagger.host = "http://localhost:8000";
+        this._swagger.schemes = ["https", "http"];
     }
     get(pathname:string):RequestValidator{
-        const req = new RequestValidatorImpl(this._route, 'get', pathname);
-        return req
+        return new RequestValidatorImpl(this._route,this._swagger, 'get', this._basepath, pathname);
     }
     post(pathname:string):RequestValidator{
-        return new RequestValidatorImpl(this._route, 'post', pathname);
+        return new RequestValidatorImpl(this._route,this._swagger, 'post', this._basepath, pathname);
     }
     put(pathname:string):RequestValidator{
-        return new RequestValidatorImpl(this._route, 'put', pathname);
+        return new RequestValidatorImpl(this._route,this._swagger, 'put', this._basepath, pathname);
     }
     delete(pathname:string):RequestValidator{
-        return new RequestValidatorImpl(this._route, 'delete', pathname);
+        return new RequestValidatorImpl(this._route, this._swagger,'delete', this._basepath, pathname);
     }
 }
 
@@ -57,19 +67,25 @@ export interface RequestValidator{
     AuthorizeHeader(option: AuthorizeOption):RequestValidator;
     RequestCriteria(schema:Joi.ObjectSchema): RequestValidator;
     Apply(callback:(RESULT:Object, req:Request, res:Response, next:NextFunction)=>void):RequestValidator;
-    Swagger():RequestValidator;
+    Swagger():Swagger;
     RequestParam(queryvar:string, joiValidation: Joi.Schema):RequestValidator;
     PathVariable(pathvar:string, joiValidation:Joi.Schema):RequestValidator ;
     ResponseBody(obj):RequestValidator;
 }
 
 export class RequestValidatorImpl implements RequestValidator{
-    constructor(_route:Router, _HttpMethod:string, pathname:string){
+    constructor(_route:Router, swagger:Swagger, _HttpMethod:string, basepath:string, pathname:string){
         this._route = _route;
         this._HttpMethod = _HttpMethod;
         this._HttpPathName = pathname;
+        this._basepath = basepath;
+        this._swagger = swagger;
+        this._pathDetail = new PathDetail();
     }
-    _createSwagger: Boolean = false;
+
+    _pathDetail: PathDetail;
+    _basepath:string;
+    _swagger: Swagger;
     _route:Router;
     _HttpMethod:string;
     _HttpPathName:string;
@@ -258,12 +274,18 @@ export class RequestValidatorImpl implements RequestValidator{
     RequestHeader(){
         return;
     }
-    RequestParam(queryvar:string, joiValidation: Joi.Schema):RequestValidator{
+    RequestParam(queryvar:string, joiValidation: Joi.ObjectSchema):RequestValidator{
         this._requestParams[queryvar] = joiValidation;
+        let param = new PathParam(queryvar);
+        param = convertJoiParamToSwagger(joiValidation, param)
+        this._pathDetail.parameters.push(param)
         return this;
     }
-    PathVariable(pathvar:string, joiValidation:Joi.Schema):RequestValidator {
+    PathVariable(pathvar:string, joiValidation:Joi.ObjectSchema):RequestValidator {
         this._pathVariables[pathvar] = joiValidation;
+        let param = new RequestParam(pathvar);
+        param = convertJoiParamToSwagger(joiValidation, param)
+        this._pathDetail.parameters.push(param)
         return this;
     }
     ResponseBody(obj):RequestValidator{
@@ -272,15 +294,19 @@ export class RequestValidatorImpl implements RequestValidator{
         return this;
     }
     Swagger(){
-       
-        return this;
+        const path = '/'+this._HttpPathName.split('/')[1];
+        this._swagger.paths[path]= {
+            [this._HttpMethod]: this._pathDetail
+        };
+        console.log(JSON.stringify(this._swagger.paths));
+        return this._swagger;
     }
     
     Apply(callback:(RESULT:Object, req:Request, res:Response, next:NextFunction)=>void):RequestValidator{
         const self = this;
         const {_route, _HttpMethod, _HttpPathName } = this;
 
-        _route[_HttpMethod](_HttpPathName, (req:Request, res:Response, next:NextFunction) => {
+        _route[_HttpMethod](this._basepath+_HttpPathName, (req:Request, res:Response, next:NextFunction) => {
             let RESULT = {};
             let errorMessages:Array<String> = [];
             const BAD_PATH_VARIABLE_STATUS = 400;
